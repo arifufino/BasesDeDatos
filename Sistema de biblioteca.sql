@@ -84,4 +84,40 @@ CREATE TABLE Detalle_Prestamo (
     FOREIGN KEY (id_ejemplar) REFERENCES Ejemplar(id_ejemplar)
 );
 
+###INSERTAR DATOS
 
+INSERT INTO Usuario (nombre, apellido, dni, email, telefono, direccion, tipo_usuario, fecha_registro, estado) VALUES
+('Juan', 'Pérez', '12345678', 'juan.perez@mail.com', '5551111', 'Av. Central 123', 'Estudiante', '2024-01-10', 'Activo'),
+('María', 'Gómez', '87654321', 'maria.gomez@mail.com', '5552222', 'Calle Norte 456', 'Docente', '2024-02-15', 'Activo');
+
+INSERT INTO Editorial (nombre, pais, telefono) VALUES
+('Editorial Alfa', 'España', '349111111'),
+('Editorial Beta', 'México', '521222222');
+
+INSERT INTO Categoria (nombre, descripcion) VALUES
+('Informática', 'Libros relacionados con tecnología y programación'),
+('Literatura', 'Obras literarias clásicas y modernas');
+
+INSERT INTO Libro (titulo, isbn, anio_publicacion, descripcion, id_editorial, id_categoria) VALUES
+('Introducción a Bases de Datos', '9781111111111', 2020, 'Conceptos básicos de bases de datos', 1, 1),
+('Cien Años de Soledad', '9782222222222', 1967, 'Novela de Gabriel García Márquez', 2, 2);
+
+INSERT INTO Autor (nombre, apellido, nacionalidad) VALUES
+('Carlos', 'Ramírez', 'Española'),
+('Gabriel', 'García Márquez', 'Colombiana');
+
+INSERT INTO Libro_Autor (id_libro, id_autor) VALUES
+(1, 1),
+(2, 2);
+
+INSERT INTO Ejemplar (id_libro, codigo_barra, estado, ubicacion) VALUES
+(1, 'BD-001', 'Disponible', 'Estante A1'),
+(2, 'LIT-001', 'Disponible', 'Estante B3');
+
+INSERT INTO Prestamo (id_usuario, fecha_prestamo, fecha_devolucion_estimada, fecha_devolucion_real, estado) VALUES
+(1, '2024-03-01', '2024-03-10', NULL, 'Activo'),
+(2, '2024-03-02', '2024-03-12', '2024-03-11', 'Devuelto');
+
+INSERT INTO Detalle_Prestamo (id_prestamo, id_ejemplar) VALUES
+(1, 1),
+(2, 2);
