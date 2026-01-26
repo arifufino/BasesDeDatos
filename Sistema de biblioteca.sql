@@ -191,3 +191,165 @@ JOIN Ejemplar e ON dp.id_ejemplar = e.id_ejemplar
 JOIN Libro l ON e.id_libro = l.id_libro
 WHERE u.id_usuario = 1;
 
+## Funciones
+
+DELIMITER //
+
+CREATE FUNCTION TotalLibrosPorCategoria(p_id_categoria INT) 
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE total INT;
+    
+    SELECT COUNT(*) INTO total 
+    FROM Libro 
+    WHERE id_categoria = p_id_categoria;
+    
+    RETURN total;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE FUNCTION EjemplaresDisponibles(p_id_libro INT) 
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE cantidad INT;
+    
+    SELECT COUNT(*) INTO cantidad 
+    FROM Ejemplar 
+    WHERE id_libro = p_id_libro AND estado = 'Disponible';
+    
+    RETURN cantidad;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE FUNCTION PromedioLibrosPorPrestamo() 
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE promedio DECIMAL(10,2);
+    
+    SELECT AVG(conteo) INTO promedio FROM (
+        SELECT COUNT(*) as conteo 
+        FROM Detalle_Prestamo 
+        GROUP BY id_prestamo
+    ) AS subconsulta;
+    
+    RETURN promedio;
+END //
+
+DELIMITER ;
+
+select TotalLibrosPorCategoria(1);
+select EjemplaresDisponibles(1);
+select PromedioLibrosPorPrestamo();
+
+## Función cadena
+DELIMITER //
+
+CREATE FUNCTION NombreCompletoUsuario(p_id_usuario INT) 
+RETURNS VARCHAR(201)
+DETERMINISTIC
+BEGIN
+    DECLARE v_nombre_completo VARCHAR(201);
+    
+    SELECT CONCAT(nombre, ' ', apellido) INTO v_nombre_completo
+    FROM Usuario
+    WHERE id_usuario = p_id_usuario;
+    
+    RETURN v_nombre_completo;
+END //
+
+DELIMITER ;
+
+## Subconsultas
+
+SELECT nombre, apellido, email 
+FROM Usuario 
+WHERE id_usuario IN (
+    SELECT id_usuario 
+    FROM Prestamo 
+    WHERE estado = 'Retrasado'
+);
+
+SELECT titulo, total 
+FROM (
+    SELECT id_libro, COUNT(*) AS total 
+    FROM Ejemplar 
+    GROUP BY id_libro
+) AS ConteoEjemplares
+JOIN Libro ON Libro.id_libro = ConteoEjemplares.id_libro
+WHERE total > 3;
+
+## Vistas
+
+CREATE VIEW Vista_Catalogo_Completo AS
+SELECT 
+    l.id_libro,
+    l.titulo,
+    CONCAT(a.nombre, ' ', a.apellido) AS autor,
+    e.nombre AS editorial,
+    c.nombre AS categoria,
+    l.anio_publicacion
+FROM Libro l
+JOIN Editorial e ON l.id_editorial = e.id_editorial
+JOIN Categoria c ON l.id_categoria = c.id_categoria
+JOIN Libro_Autor la ON l.id_libro = la.id_libro
+JOIN Autor a ON la.id_autor = a.id_autor;
+
+CREATE VIEW Vista_Prestamos_Pendientes AS
+SELECT 
+    p.id_prestamo,
+    u.nombre AS usuario,
+    u.telefono,
+    l.titulo AS libro,
+    ej.codigo_barra,
+    p.fecha_devolucion_estimada
+FROM Prestamo p
+JOIN Usuario u ON p.id_usuario = u.id_usuario
+JOIN Detalle_Prestamo dp ON p.id_prestamo = dp.id_prestamo
+JOIN Ejemplar ej ON dp.id_ejemplar = ej.id_ejemplar
+JOIN Libro l ON ej.id_libro = l.id_libro
+WHERE p.estado = 'Activo';
+
+DELIMITER //
+CREATE FUNCTION obtener_usuario(p_id_usuario INT)
+RETURNS VARCHAR(100)
+DETERMINISTIC
+BEGIN
+	DECLARE resultado VARCHAR(100);
+    SELECT nombre
+    INTO resultado
+    FROM usuario
+    WHERE id_usuario = p_id_usuario;
+    
+    RETURN resultado;
+END//
+DELIMITER ;
+select obtener_usuario(1 or 1=1);
+
+CREATE USER 'admin_biblio'@'localhost' IDENTIFIED BY '12345';
+GRANT ALL PRIVILEGES ON Sistema_Biblioteca.* TO 'admin_biblio'@'localhost';
+
+CREATE USER 'bibliotecario_1'@'localhost' IDENTIFIED BY '12345';
+GRANT SELECT, INSERT, UPDATE ON Sistema_Biblioteca.* TO 'bibliotecario_1'@'localhost';
+
+CREATE USER 'lector_consulta'@'localhost' IDENTIFIED BY '12345';
+GRANT SELECT ON Sistema_Biblioteca.Libro TO 'lector_consulta'@'localhost';
+GRANT SELECT ON Sistema_Biblioteca.Vista_Catalogo_Completo TO 'lector_consulta'@'localhost';
+
+
+DROP USER 'admin_biblio'@'localhost';
+REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'admin_biblio'@'localhost';
+
+DROP USER 'bibliotecario_1'@'localhost';
+REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'bibliotecario_1'@'localhost';
+
+DROP USER 'lector_consulta'@'localhost';
+REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'lector_consulta'@'localhost';
