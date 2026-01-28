@@ -237,4 +237,81 @@ from usuario u
 join prestamo p on u.id_usuario = p.id_usuario
 group by u.tipo_usuario;
 
+###consultas avanzadas y operaciones sql para sistema de biblioteca
+
+###funciones de agregacion (count, sum, avg)
+select
+    c.nombre as categoria,
+    count(l.id_libro) as total_libros
+from categoria c
+left join libro l on c.id_categoria = l.id_categoria
+group by c.id_categoria;
+
+select
+    u.tipo_usuario,
+    count(p.id_prestamo) as total_prestamos
+from usuario u
+join prestamo p on u.id_usuario = p.id_usuario
+group by u.tipo_usuario;
+
+select
+    avg(year(curdate()) - l.anio_publicacion) as promedio_antiguedad_libros
+from libro l;
+
+###funciones de cadena
+select
+    concat(nombre, ' ', apellido) as nombre_completo,
+    upper(email) as email_mayusculas,
+    length(dni) as longitud_dni
+from usuario;
+
+select
+    substring(titulo, 1, 10) as inicio_titulo
+from libro;
+
+###subconsultas
+select
+    l.titulo
+from libro l
+where l.id_libro not in (
+    select e.id_libro
+    from ejemplar e
+    join detalle_prestamo dp on e.id_ejemplar = dp.id_ejemplar
+);
+
+select
+    nombre,
+    apellido
+from usuario
+where id_usuario in (
+    select id_usuario
+    from prestamo
+    where estado = 'Activo'
+);
+
+###vista
+create view vista_historial_prestamos as
+select
+    u.nombre,
+    u.apellido,
+    l.titulo,
+    p.fecha_prestamo,
+    p.fecha_devolucion_real,
+    p.estado
+from usuario u
+join prestamo p on u.id_usuario = p.id_usuario
+join detalle_prestamo dp on p.id_prestamo = dp.id_prestamo
+join ejemplar e on dp.id_ejemplar = e.id_ejemplar
+join libro l on e.id_libro = l.id_libro;
+
+###insert
+insert into categoria (nombre, descripcion)
+values ('historia', 'libros historicos');
+
+###update
+update ejemplar
+set estado = 'Prestado'
+where id_ejemplar = 1;
+
+
 
