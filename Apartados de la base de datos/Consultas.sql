@@ -68,3 +68,48 @@ JOIN Detalle_Prestamo dp ON p.id_prestamo = dp.id_prestamo
 JOIN Ejemplar e ON dp.id_ejemplar = e.id_ejemplar
 JOIN Libro l ON e.id_libro = l.id_libro
 WHERE u.id_usuario = 1;
+
+###autores y cantidad de libros escritos
+select 
+    a.nombre,
+    a.apellido,
+    count(la.id_libro) as total_libros
+from autor a
+join libro_autor la on a.id_autor = la.id_autor
+group by a.id_autor;
+
+###libros con su editorial y categoria
+select
+    l.titulo,
+    e.nombre as editorial,
+    c.nombre as categoria
+from libro l
+join editorial e on l.id_editorial = e.id_editorial
+join categoria c on l.id_categoria = c.id_categoria;
+
+###usuarios que nunca han realizado prestamos
+select
+    u.nombre,
+    u.apellido,
+    u.dni
+from usuario u
+left join prestamo p on u.id_usuario = p.id_usuario
+where p.id_prestamo is null;
+
+###ejemplares no disponibles
+select
+    l.titulo,
+    e.codigo_barra,
+    e.estado
+from ejemplar e
+join libro l on e.id_libro = l.id_libro
+where e.estado <> 'Disponible';
+
+###cantidad de prestamos por tipo de usuario
+select
+    u.tipo_usuario,
+    count(p.id_prestamo) as total_prestamos
+from usuario u
+join prestamo p on u.id_usuario = p.id_usuario
+group by u.tipo_usuario;
+
